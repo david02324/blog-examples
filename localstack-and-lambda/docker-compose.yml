@@ -8,18 +8,38 @@ services:
       - "4566:4566"
     environment:
       DEBUG: 1
-      SERVICES: lambda,apigateway,s3
+      SERVICES: lambda,apigateway,s3,dynamodb,dynamodbstreams
       LAMBDA_EXECUTOR: local
     volumes:
       - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
 
-  db:
-    container_name: postgres
-    image: postgres:latest
-    restart: always
+  dynamodb-admin:
+    image: "aaronshaf/dynamodb-admin:latest"
+    container_name: "dynamodb-viewer"
     ports:
-      - "5432:5432"
+      - "8001:8001"
     environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "Don't look!"
+      DYNAMO_ENDPOINT: http://localstack:4566
+      AWS_REGION: ap-northeast-2
+      AWS_ACCESS_KEY_ID: xxx
+      AWS_SECRET_ACCESS_KEY: xxx
+    depends_on:
+      - "localstack"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    container_name: es
+    environment:
+      node.name: es
+      cluster.name: es-docker-cluster
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms128m -Xmx600m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /usr/share/data/elasticsearch:${PWD}/elasticsearch/data
+    ports:
+      - "9200:9200"

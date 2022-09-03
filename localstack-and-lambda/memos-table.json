@@ -1,0 +1,20 @@
+{
+  "TableName": "memos",
+  "KeySchema": [
+    {
+      "AttributeName": "id",
+      "KeyType": "HASH"
+    }
+  ],
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "id",
+      "AttributeType": "S"
+    }
+  ],
+  "StreamSpecification": {
+    "StreamViewType": "NEW_IMAGE",
+    "StreamEnabled": true
+  },
+  "BillingMode": "PAY_PER_REQUEST"
+}
