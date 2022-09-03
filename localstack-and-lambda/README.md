@@ -1,0 +1,1 @@
+[로컬스택 및 람다로 로컬 개발환경 만들기](https://david02324.github.io/posts/localstack-and-lambda/)
