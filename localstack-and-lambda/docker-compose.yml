@@ -9,7 +9,6 @@ services:
     environment:
       DEBUG: 1
       SERVICES: lambda,apigateway,s3,dynamodb,dynamodbstreams
-      LAMBDA_EXECUTOR: local
     volumes:
       - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"

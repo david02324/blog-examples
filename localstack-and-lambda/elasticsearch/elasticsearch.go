@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"github.com/elastic/go-elasticsearch"
 	"localstack-and-lambda/model"
+	"log"
 	"time"
 )
 
 type ESClient interface {
 	BulkCreate(memos *[]model.Memo) error
+	GetItem(index string, id string) map[string]any
 }
 
 type ESClientImpl struct {
@@ -27,7 +29,11 @@ type ESCreateIndex struct {
 }
 
 func NewESClient() (ESClient, error) {
-	es, err := elasticsearch.NewClient(elasticsearch.Config{Addresses: []string{"http://172.17.0.1:9200"}})
+	return NewESClientWithAddress("http://172.17.0.1:9200")
+}
+
+func NewESClientWithAddress(address string) (ESClient, error) {
+	es, err := elasticsearch.NewClient(elasticsearch.Config{Addresses: []string{address}})
 	if err != nil {
 		return nil, fmt.Errorf("error creating es client: %s", err)
 	}
@@ -38,7 +44,7 @@ func NewESClient() (ESClient, error) {
 func (c ESClientImpl) BulkCreate(memos *[]model.Memo) error {
 	var packets []byte
 	for _, memo := range *memos {
-		index := ESIndex{Index: GetMessageESIndex(), Id: memo.Id}
+		index := ESIndex{Index: GetMemoESIndex(), Id: memo.Id}
 		createIndex := ESCreateIndex{index}
 
 		indexBytes, err := json.Marshal(createIndex)
@@ -57,12 +63,32 @@ func (c ESClientImpl) BulkCreate(memos *[]model.Memo) error {
 		packets = append(packets, "\n"...)
 	}
 
-	fmt.Println(string(packets))
 	_, err := c.client.Bulk(bytes.NewReader(packets))
 	return err
 }
 
-func GetMessageESIndex() string {
+func (c ESClientImpl) GetItem(index string, id string) map[string]any {
+	res, err := c.client.Get(index, id)
+	if err != nil {
+		log.Fatalf("es GetItem error\n%v", err)
+	}
+	doc := make(map[string]any)
+
+	buf := new(bytes.Buffer)
+	_, err = buf.ReadFrom(res.Body)
+	if err != nil {
+		log.Fatalf("buffer read error\n%v", err)
+	}
+
+	err = json.Unmarshal(buf.Bytes(), &doc)
+	if err != nil {
+		log.Fatalf("json unmarshal error\n%v", err)
+	}
+
+	return doc
+}
+
+func GetMemoESIndex() string {
 	t := time.Now()
 	return fmt.Sprintf("memos-%d-%02d", t.Year(), t.Month())
 }

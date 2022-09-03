@@ -11,7 +11,6 @@ import (
 func HandleRequest(request events.DynamoDBEvent) {
 	var memos []model.Memo
 
-	fmt.Println(memos)
 	for _, record := range request.Records {
 		if record.EventName == "INSERT" {
 			image := record.Change.NewImage

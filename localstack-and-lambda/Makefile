@@ -16,6 +16,8 @@ build:
 create-table:
 	aws dynamodb create-table --cli-input-json file://memos-table.json --endpoint-url http://localhost:4566
 
+redeploy: remove-lambda zip-executable build deploy-lambda
+
 deploy-lambda:
 	aws lambda create-function \
 		--function-name memo-lambda \
